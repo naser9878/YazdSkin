@@ -67,7 +67,7 @@ def predict(x_test, model):
     Y_pred = model.predict(x_test)
     ynew = model.predict_proba(x_test)
     K.clear_session()
-    ynew = np.round(ynew, 2)
+    #ynew = np.round(ynew, 2)
     ynew = ynew*100
     y_new = ynew[0].tolist()
     Y_pred_classes = np.argmax(Y_pred, axis=1)
