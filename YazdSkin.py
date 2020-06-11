@@ -11,13 +11,6 @@ import io
 from PIL import Image
 import plotly.express as px
 
-
-from keras.preprocessing.image import ImageDataGenerator
-from keras.callbacks import ModelCheckpoint
-from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPool2D,Activation
-from keras.layers.normalization import BatchNormalization
-
-
 MODELSPATH = './models/'
 DATAPATH = './data/'
 
@@ -33,19 +26,10 @@ def render_header():
     """, unsafe_allow_html=True)
 
 
-def get_model_summary(model):
-    stream = io.StringIO()
-    model.summary(print_fn=lambda x: stream.write(x + '\n'))
-    summary_string = stream.getvalue()
-    stream.close()
-    return summary_string
-
-
 @st.cache
 def load_mekd():
     img = Image.open(DATAPATH + '/ISIC_0024312.jpg')
     return img
-
 
 
 @st.cache
@@ -75,7 +59,6 @@ def data_gen_(img):
 def load_models():
 
     model = load_model(MODELSPATH + 'model.h5')
-    model.summary()
     return model
 
 
@@ -83,17 +66,13 @@ def load_models():
 def predict(x_test, model):
     Y_pred = model.predict(x_test)
     ynew = model.predict_proba(x_test)
-    ynew2 = model.predict_classes(x_test)
-
     K.clear_session()
     ynew = np.round(ynew, 2)
     ynew = ynew*100
     y_new = ynew[0].tolist()
-
-
     Y_pred_classes = np.argmax(Y_pred, axis=1)
     K.clear_session()
-    return ynew2,y_new, Y_pred_classes
+    return y_new, Y_pred_classes
 
 
 @st.cache
@@ -110,10 +89,6 @@ def display_prediction(y_new):
 
 
 def main():
-    from urllib.parse import quote
-    from urllib.request import urlopen
-    import streamlit as st
-
 
     img = Image.open(DATAPATH + '/logo.jpg')
     st.image(img, caption='', width=None)
@@ -122,7 +97,6 @@ def main():
     st.sidebar.title('Skin cancer Analyzers')
     ## st.sidebar.image(img)
 
-    st.sidebar.subheader('Choose a page to proceed:')
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
@@ -130,9 +104,9 @@ def main():
 		body {text-align: center !important}
         </style>
         """, unsafe_allow_html=True)
-		
-		
 
+
+    st.sidebar.subheader('Choose a page to proceed:')
     page = st.sidebar.selectbox("", ["Sample Data", "Upload Your Image"])
 
     if page == "Sample Data":
@@ -142,7 +116,6 @@ def main():
 
         You need to choose Sample Data
         """)
-
 
         mov_base = ['Sample Data I']
         movies_chosen = st.multiselect('Choose Sample Data', mov_base)
@@ -159,63 +132,21 @@ def main():
                 st.info("Showing Sample data---->>>")
                 image = load_mekd()
                 st.image(image, caption='Sample Data', use_column_width=True)
-                st.subheader(" Training Algorithm!")
-
+                st.subheader("Choose Training Algorithm!")
                 if st.checkbox('Convolutional Neural Network'):
-                    st.subheader(" Set some hyperparameters")
                     batch_size = st.selectbox('Select batch size', [32, 64, 128, 256])
                     epochs=st.selectbox('Select number of epochs', [3, 10, 25, 50])
                     loss_function = st.selectbox('Loss function', ['mean_squared_error', 'mean_absolute_error', 'categorical_crossentropy'])
                     optimizer = st.selectbox('Optimizer', ['SGD', 'RMSprop', 'Adam'])
 
-                    st.subheader('Building your CNN')
-                    model = Sequential()
-
-                    act1 = st.selectbox('Activation function for first layer: ', ['relu', 'tanh', 'softmax'])
-
-                    model.add(Conv2D(filters = 16,activation=act1,kernel_size = 2,input_shape=(75,100,3),padding='same'))
-
-                    model.add(MaxPool2D(pool_size=2))
-
-                    model.add(Conv2D(filters = 32,kernel_size = 2,activation= act1,padding='same'))
-                    model.add(MaxPool2D(pool_size=2))
-
-                    model.add(Conv2D(filters = 64,kernel_size = 2,activation=act1,padding='same'))
-                    model.add(MaxPool2D(pool_size=2))
-
-                    model.add(Conv2D(filters = 128,kernel_size = 2,activation=act1,padding='same'))
-                    model.add(MaxPool2D(pool_size=2))
-
-                    drop2=st.selectbox('Which drop rate?', [0.1, 0.25,0.3, 0.5],key=1)
-                    model.add(Dropout(drop2))
-
-                        
-
-                    model.add(Flatten())
-                    model.add(Dense(150))
-
-                    if st.checkbox('Add drop layer?'):
-                        drop1=st.selectbox('Which drop rate?', [0.1, 0.25,0.3, 0.5],key=0)
-                        model.add(Dropout(drop1))
-
-
-                    act3 = st.selectbox('Activation function for Dense layer: ', ['relu', 'tanh', 'softmax'])
-                    model.add(Dense(7,activation = act3))
-                    model.summary()
-
-
                     if st.checkbox('Submit CNN'):
                         model = load_models()
                         st.success("Hooray !! Keras Model Loaded!")
-                        model_summary_string = get_model_summary(model)
-                        st.info(model_summary_string)
-                        
                         if st.checkbox('Show Prediction Probablity on Sample Data'):
                             x_test = data_gen(DATAPATH + '/ISIC_0024312.jpg')
-                            y_new2,y_new, Y_pred_classes = predict(x_test, model)
+                            y_new, Y_pred_classes = predict(x_test, model)
                             result = display_prediction(y_new)
                             st.write(result)
-
                             if st.checkbox('Display Probability Graph'):
                                 fig = px.bar(result, x="Classes",
                                             y="Probability", color='Classes')
@@ -240,67 +171,24 @@ def main():
             st.info("Showing Uploaded Image ---->>>")
             st.image(img_array, caption='Uploaded Image',
                      use_column_width=True)
+            st.subheader("Choose Training Algorithm!")
             if st.checkbox('Convolutional Neural Network'):
-                    st.subheader(" Set some hyperparameters")
-                    batch_size = st.selectbox('Select batch size', [32, 64, 128, 256])
-                    epochs=st.selectbox('Select number of epochs', [3, 10, 25, 50])
-                    loss_function = st.selectbox('Loss function', ['mean_squared_error', 'mean_absolute_error', 'categorical_crossentropy'])
-                    optimizer = st.selectbox('Optimizer', ['SGD', 'RMSprop', 'Adam'])
+                batch_size = st.selectbox('Select batch size', [32, 64, 128, 256])
+                epochs=st.selectbox('Select number of epochs', [3, 10, 25, 50])
+                loss_function = st.selectbox('Loss function', ['mean_squared_error', 'mean_absolute_error', 'categorical_crossentropy'])
+                optimizer = st.selectbox('Optimizer', ['SGD', 'RMSprop', 'Adam'])
+                if st.checkbox('Submit CNN'):
+                    model = load_models()
+                    st.success("Hooray !! Keras Model Loaded!")
+                    if st.checkbox('Show Prediction Probablity for Uploaded Image'):
+                        y_new, Y_pred_classes = predict(x_test, model)
+                        result = display_prediction(y_new)
+                        st.write(result)
+                        if st.checkbox('Display Probability Graph'):
+                            fig = px.bar(result, x="Classes",
+                                        y="Probability", color='Classes')
+                            st.plotly_chart(fig, use_container_width=True)
 
-                    st.subheader('Building your CNN')
-                    model = Sequential()
-
-                    act1 = st.selectbox('Activation function for first layer: ', ['relu', 'tanh', 'softmax'])
-
-                    model.add(Conv2D(filters = 16,activation=act1,kernel_size = 2,input_shape=(75,100,3),padding='same'))
-
-                    model.add(MaxPool2D(pool_size=2))
-
-                    model.add(Conv2D(filters = 32,kernel_size = 2,activation= act1,padding='same'))
-                    model.add(MaxPool2D(pool_size=2))
-
-                    model.add(Conv2D(filters = 64,kernel_size = 2,activation=act1,padding='same'))
-                    model.add(MaxPool2D(pool_size=2))
-
-                    model.add(Conv2D(filters = 128,kernel_size = 2,activation=act1,padding='same'))
-                    model.add(MaxPool2D(pool_size=2))
-
-                    drop2=st.selectbox('Which drop rate?', [0.1, 0.25,0.3, 0.5],key=1)
-                    model.add(Dropout(drop2))
-
-                        
-
-                    model.add(Flatten())
-                    model.add(Dense(150))
-
-                    if st.checkbox('Add drop layer?'):
-                        drop1=st.selectbox('Which drop rate?', [0.1, 0.25,0.3, 0.5],key=0)
-                        model.add(Dropout(drop1))
-
-
-                    act3 = st.selectbox('Activation function for Dense layer: ', ['relu', 'tanh', 'softmax'])
-                    model.add(Dense(7,activation = act3))
-                    model.summary()
-
-
-                    if st.checkbox('Submit CNN'):
-                        model = load_models()
-                        st.success("Hooray !! Keras Model Loaded!")
-                        model_summary_string = get_model_summary(model)
-                        st.info(model_summary_string)
-                        
-                        if st.checkbox('Show Prediction Probablity on Sample Data'):
-                            x_test = data_gen(DATAPATH + '/ISIC_0024312.jpg')
-                            y_new2,y_new, Y_pred_classes = predict(x_test, model)
-                            result = display_prediction(y_new)
-                            st.write(result)
-
-                            if st.checkbox('Display Probability Graph'):
-                                fig = px.bar(result, x="Classes",
-                                            y="Probability", color='Classes')
-                                st.plotly_chart(fig, use_container_width=True)
 
 if __name__ == "__main__":
     main()
-
-
