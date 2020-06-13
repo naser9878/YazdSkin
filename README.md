@@ -5,8 +5,6 @@
 #### This is a prototype for an online tool that can detect Skin cancer.
 #### Notebook code  for this application [Available here](https://www.kaggle.com/shashwatwork/skin-cancer-analyzer-streamlit-app)
 
-### Made with ![](streamlit-logo.png)
-### Powered with ![keras](keras.png)
 
-![animated-demo](animated.gif)
+# Naser Bagheri
 "# YazdSkin" 

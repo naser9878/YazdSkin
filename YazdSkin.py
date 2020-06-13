@@ -1,15 +1,17 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import keras
+
 from keras.utils.np_utils import to_categorical
-from keras.models import Sequential, load_model
+from keras.models import Sequential,load_model
 from keras import backend as K
 import os
 import time
 import io
 from PIL import Image
 import plotly.express as px
+
+
 
 MODELSPATH = './models/'
 DATAPATH = './data/'
@@ -56,9 +58,12 @@ def data_gen_(img):
     return x_validate
 
 
-def load_models():
+def load_models1():
+    model = load_model(MODELSPATH + 'model1.h5')
+    return model
 
-    model = load_model(MODELSPATH + 'model.h5')
+def load_models2():
+    model = load_model(MODELSPATH + 'model2.h5')
     return model
 
 
@@ -134,14 +139,21 @@ def main():
                 st.image(image, caption='Sample Data', use_column_width=True)
                 st.subheader("Choose Training Algorithm!")
                 if st.checkbox('Convolutional Neural Network'):
-                    batch_size = st.selectbox('Select batch size', [32, 64, 128, 256])
-                    epochs=st.selectbox('Select number of epochs', [3, 10, 25, 50])
-                    loss_function = st.selectbox('Loss function', ['mean_squared_error', 'mean_absolute_error', 'categorical_crossentropy'])
-                    optimizer = st.selectbox('Optimizer', ['SGD', 'RMSprop', 'Adam'])
+                    # batch_size = st.selectbox('Select batch size', [32, 64, 128, 256])
+                    # epochs=st.selectbox('Select number of epochs', [3, 10, 25, 50])
+                    # loss_function = st.selectbox('Loss function', ['mean_squared_error', 'mean_absolute_error', 'categorical_crossentropy'])
+                    # optimizer = st.selectbox('Optimizer', ['SGD', 'RMSprop', 'Adam'])
+                    pic = st.selectbox("Model choices", ['Model A', 'Model B'], 0)
 
                     if st.checkbox('Submit CNN'):
-                        model = load_models()
-                        st.success("Hooray !! Keras Model Loaded!")
+                        if pic in 'Model A':
+                            model = load_models1()
+                            st.success("Hooray !! Keras Model A Loaded!")
+                        else:
+                            model = load_models2()
+                            st.success("Hooray !! Keras Model B Loaded!")
+                        
+                        
                         if st.checkbox('Show Prediction Probablity on Sample Data'):
                             x_test = data_gen(DATAPATH + '/ISIC_0024312.jpg')
                             y_new, Y_pred_classes = predict(x_test, model)
@@ -173,13 +185,21 @@ def main():
                      use_column_width=True)
             st.subheader("Choose Training Algorithm!")
             if st.checkbox('Convolutional Neural Network'):
-                batch_size = st.selectbox('Select batch size', [32, 64, 128, 256])
-                epochs=st.selectbox('Select number of epochs', [3, 10, 25, 50])
-                loss_function = st.selectbox('Loss function', ['mean_squared_error', 'mean_absolute_error', 'categorical_crossentropy'])
-                optimizer = st.selectbox('Optimizer', ['SGD', 'RMSprop', 'Adam'])
+                # batch_size = st.selectbox('Select batch size', [32, 64, 128, 256])
+                # epochs=st.selectbox('Select number of epochs', [3, 10, 25, 50])
+                # loss_function = st.selectbox('Loss function', ['mean_squared_error', 'mean_absolute_error', 'categorical_crossentropy'])
+                # optimizer = st.selectbox('Optimizer', ['SGD', 'RMSprop', 'Adam'])
+                pic = st.selectbox("Model choices", ['Model A', 'Model B'], 0)
+
                 if st.checkbox('Submit CNN'):
-                    model = load_models()
-                    st.success("Hooray !! Keras Model Loaded!")
+                    if pic in 'Model A':
+                       model = load_models1()
+                       st.success("Hooray !! Keras Model A Loaded!")
+                    else:
+                       model = load_models2()
+                       st.success("Hooray !! Keras Model B Loaded!")
+
+
                     if st.checkbox('Show Prediction Probablity for Uploaded Image'):
                         y_new, Y_pred_classes = predict(x_test, model)
                         result = display_prediction(y_new)
