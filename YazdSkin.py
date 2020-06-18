@@ -72,7 +72,7 @@ def predict(x_test, model):
     Y_pred = model.predict(x_test)
     ynew = model.predict_proba(x_test)
     K.clear_session()
-    #ynew = np.round(ynew, 2)
+    ynew = np.round(ynew, 5)
     ynew = ynew*100
     y_new = ynew[0].tolist()
     Y_pred_classes = np.argmax(Y_pred, axis=1)
@@ -84,13 +84,15 @@ def predict(x_test, model):
 def display_prediction(y_new):
     """Display image and preditions from model"""
 
-    result = pd.DataFrame({'Probability': y_new}, index=np.arange(7))
+    result = pd.DataFrame({'Probability (%)': y_new}, index=np.arange(7))
     result = result.reset_index()
-    result.columns = ['Classes', 'Probability']
+    result.columns = ['Classes', 'Probability (%)']
     lesion_type_dict = {2: 'Benign keratosis-like lesions', 4: 'Melanocytic nevi', 3: 'Dermatofibroma',
                         5: 'Melanoma', 6: 'Vascular lesions', 1: 'Basal cell carcinoma', 0: 'Actinic keratoses'}
     result["Classes"] = result["Classes"].map(lesion_type_dict)
+    # result.style.highlight_max(axis=0)
     return result
+
 
 
 def main():
@@ -106,9 +108,10 @@ def main():
         <style>
         #MainMenu {visibility: hidden;}
 		h1{color: red;}
-		body {text-align: center !important}
+		body {text-align: center !important;}
         </style>
         """, unsafe_allow_html=True)
+		# body {text-align: center !important; direction: rtl!important;}
 
 
     st.sidebar.subheader('Choose a page to proceed:')
@@ -158,11 +161,13 @@ def main():
                             x_test = data_gen(DATAPATH + '/ISIC_0024312.jpg')
                             y_new, Y_pred_classes = predict(x_test, model)
                             result = display_prediction(y_new)
-                            st.write(result)
+                            st.dataframe(result.style.highlight_max(axis=0))
+                            # st.write(result)
                             if st.checkbox('Display Probability Graph'):
                                 fig = px.bar(result, x="Classes",
-                                            y="Probability", color='Classes')
+                                            y="Probability (%)", color='Classes')
                                 st.plotly_chart(fig, use_container_width=True)
+                               
 
     if page == "Upload Your Image":
 
@@ -203,12 +208,16 @@ def main():
                     if st.checkbox('Show Prediction Probablity for Uploaded Image'):
                         y_new, Y_pred_classes = predict(x_test, model)
                         result = display_prediction(y_new)
-                        st.write(result)
+                        st.dataframe(result.style.highlight_max(axis=0))
+                        # st.write(result.style.applymap(highlight_max(axis=0)))
+
+
+                        # st.write(result)
                         if st.checkbox('Display Probability Graph'):
                             fig = px.bar(result, x="Classes",
-                                        y="Probability", color='Classes')
+                                        y="Probability (%)", color='Classes')
                             st.plotly_chart(fig, use_container_width=True)
 
-
+                            
 if __name__ == "__main__":
     main()
